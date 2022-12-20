@@ -1,13 +1,19 @@
 import serial
 import time
-import csv
 import re
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
+import os
 
 # make sure the 'COM#' is set according the Windows Device Manager
 ser = serial.Serial('COM6', 115200, timeout=1)
 time.sleep(2)
+
+#Tiempos
+# 1,42 de media para lumos
+# 1,57 media revelio
+# 20 frames parece considerable
 
 #Matplotlib
 
@@ -28,15 +34,40 @@ plt.ylim([-12, 12])
 def extract_floats(string):
     return [float(x) for x in re.findall(r"[-+]?\d*\.\d+|\d+", string)]
 
+""" 
+def write_to_csv(aX, aY, aZ, rX,rY, rZ):
+    #Cambiar carpeta si hace falta
+    fileName = "./spells/testing/lumos" + str(fileCounter) + ".csv"
+    with open(fileName, 'a', newline='') as f:
+        writer = csv.writer(f, delimiter=",")
 
+        writer.writerow([ aX, aY, aZ, rX,rY, rZ])
+ """
 #Global Variables
 et = time.time()
 recording = False 
-recordCD = 1
+recordCD = 1 #Cooldown
 lastRecorded = time.time() + recordCD
 
+# Array donde iremos "apilando las filas de valores hasta 20"
+img_array = []
+max_sequences = 20
+
+#File management
 fileCounter = 0
-fileName = "./spells/testing/test" + str(fileCounter) + ".csv"
+spellName = 'Revelio'
+fileDir = './spells/' + spellName + '/'
+
+
+#Encontramos el ultimo archivo que grabamos para añadir y no sobrescribir
+files = os.listdir(fileDir)
+
+for file in files:
+    file = str(file.split('.')[0])
+    if file[-1].isdigit():
+        if int(file[-1]) > fileCounter:
+            fileCounter = int(file[-1])
+
 
 while True:
     try:
@@ -46,7 +77,7 @@ while True:
         try:
             #Procesamos datos
             aX, aY, aZ, rX, rY, rZ = extract_floats(decoded_bytes)
-            print(aX, aY, aZ)
+            #print(aX, aY, aZ)
 
             #Matplot
             aXVal = np.append(aXVal, aX)
@@ -59,12 +90,29 @@ while True:
             aZVal = aZVal[1:plot_window + 1]
 
             if recording:
-                fileName = "./spells/testing/test" + str(fileCounter) + ".csv"
 
-                with open(fileName, 'a', newline='') as f:
-                    writer = csv.writer(f, delimiter=",")
-                    #round(time.time() - et, 4) neccessary?
-                    writer.writerow([ aX, aY, aZ, rX,rY, rZ])
+                if len(img_array) == max_sequences:
+                    
+                    #Procesar array en imagen
+                    np_img_array = np.array(img_array, dtype=float)
+                    #Normalizar array
+                    min_val = np_img_array.min()
+                    max_val = np_img_array.max()
+                    norm_arr = (np_img_array - min_val) / (max_val - min_val)
+
+                    scaled_arr = norm_arr * 255
+                    uint8_arr = scaled_arr.astype(np.uint8)
+
+                    image = Image.fromarray(uint8_arr, 'L')
+                    # Lo guardamos como jpeg
+                    fileCounter = fileCounter + 1
+                    filename = fileDir + spellName + str(fileCounter) + ".jpeg"
+                    image.save(filename, 'JPEG')
+
+                    recording = False
+                    print("Fin de la grabación")
+                else:
+                    img_array.append([aX, aY, aZ, rX, rY, rZ])
 
             aXLine.set_ydata(aXVal)
             aYLine.set_ydata(aYVal)
@@ -73,15 +121,16 @@ while True:
             fig.canvas.draw()
             fig.canvas.flush_events()
 
-        except: 
+        except Exception as e: 
             # Linea de pushed
-            if decoded_bytes == 'PUSHED' and time.time() > lastRecorded + recordCD:
+            #print(decoded_bytes)
+            if decoded_bytes == 'PUSHED' and not recording and time.time() > lastRecorded + recordCD:
+                img_array.clear()
                 lastRecorded = time.time()
-                recording = not recording
-                print("Grabando datos: ", recording)
-
-                #Siguiente archivo
-                if recording == True: fileCounter += 1
+                recording = True
+                print("Recogiendo datos: ")
+            else:
+                print("Debes esperar para volver a empezar a grabar.")
 
     except KeyboardInterrupt:
         print("Keyboard Interrupt")
