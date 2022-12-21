@@ -7,7 +7,7 @@ from PIL import Image
 import os
 
 # make sure the 'COM#' is set according the Windows Device Manager
-ser = serial.Serial('COM6', 115200, timeout=1)
+ser = serial.Serial('COM3', 115200, timeout=1)
 time.sleep(2)
 
 #Tiempos
@@ -55,7 +55,7 @@ max_sequences = 20
 
 #File management
 fileCounter = 0
-spellName = 'Revelio'
+spellName = 'network_testing'
 fileDir = './spells/' + spellName + '/'
 
 
