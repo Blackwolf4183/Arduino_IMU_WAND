@@ -3,8 +3,11 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <SoftwareSerial.h>
 
 Adafruit_MPU6050 mpu;
+
+SoftwareSerial mySerial(10, 11); // RX, TX
 
 void setup(void) {
   Serial.begin(115200);
@@ -28,7 +31,14 @@ void setup(void) {
   //21 Khz bandwitdh
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
   delay(100);
+
+
+  //conexion de prueba con serial
+  mySerial.begin(115200);
+  mySerial.println("Comenzando conexion");
 }
+
+bool activated = false;
 
 void loop() {
 
@@ -36,8 +46,15 @@ void loop() {
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
 
+  String values = "";
+  values = String(a.acceleration.x) + "," + String(a.acceleration.y) + "," + String(a.acceleration.z) + "," + String(g.gyro.x) + "," + String(g.gyro.y) +"," + String(g.gyro.z) ;
+
+  mySerial.println(values);
+  Serial.println(values);
+
+
   /* Print out the values */
-  Serial.print("Acceleration X: ");
+  /* Serial.print("Acceleration X: ");
   Serial.print(a.acceleration.x);
   Serial.print(", Y: ");
   Serial.print(a.acceleration.y);
@@ -53,6 +70,6 @@ void loop() {
   Serial.print(g.gyro.z);
   Serial.println(" rad/s");
 
-  Serial.println("");
+  Serial.println(""); */
   delay(100);
 }

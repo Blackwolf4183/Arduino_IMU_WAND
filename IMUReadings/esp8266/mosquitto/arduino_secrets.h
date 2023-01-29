@@ -1,0 +1,2 @@
+#define SECRET_SSID "MOVISTAR_9770"
+#define SECRET_PASS "fGYCSuPWiQdAvQvPfhLv"

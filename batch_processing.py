@@ -22,8 +22,8 @@ classifier = tf.keras.models.load_model('classifier')
 # Check its architecture
 classifier.summary()
 
-
-ser = serial.Serial('COM3', 115200, timeout=1)
+print("Iniciado conexión")
+ser = serial.Serial('COM4', 115200, timeout=1)
 time.sleep(2)
 
 buffer = []
@@ -77,6 +77,7 @@ def run_prediction():
         print("Este hechizo es de tipo {} con {:.2f} % de confianza.".format(class_names[0], 100 * np.max(score)))     
 
 
+
 while True:
     try:
         ser_bytes = ser.readline()
@@ -87,6 +88,7 @@ while True:
             aX, aY, aZ, rX, rY, rZ = extract_floats(decoded_bytes)
             #print(aX, aY, aZ,rX,rY,rZ)
 
+            print(aX, aY, aZ, rX, rY, rZ)
             if abs(aX) > 15 or abs(aY) > 15 or abs(aZ) > 15:
                 if display:
                     print("Movimiento en curso")
