@@ -87,6 +87,7 @@ void loop() {
   buttonState = digitalRead(buttonPin);
 
   if (buttonState == HIGH && canPushButton) {
+    Serial.println("Button has been pushed");
     toggle_led();
     mySerial.println("Sequence");
   }
