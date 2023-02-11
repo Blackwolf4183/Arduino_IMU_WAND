@@ -1,1 +1,0 @@
-The Elder Wand by jakereeves on Thingiverse: https://www.thingiverse.com/thing:1069671

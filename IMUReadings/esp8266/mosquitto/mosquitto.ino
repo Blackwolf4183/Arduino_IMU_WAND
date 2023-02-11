@@ -45,6 +45,7 @@ void setup() {
   //client.publish(topic, "HELLO WORLD");
   client.subscribe(topic);
   
+  client.publish(topic, "ESP8266 up and running");
 }
 
 void callback(char *topic, byte *payload, unsigned int length) {

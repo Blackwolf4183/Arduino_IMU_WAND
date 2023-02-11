@@ -24,7 +24,7 @@ time.sleep(0.4)
 client.loop_start()
 testnum = 0
 while True:
-    client.publish("test", f"test{testnum}")
+    client.publish("wand_sensor", f"test{testnum}")
     print("Publishing... " + f"test{testnum}")
     testnum += 1
     time.sleep(4)
