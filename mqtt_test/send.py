@@ -27,7 +27,7 @@ while True:
     client.publish("wand_sensor", "successful")
     print("successful")
     testnum += 1
-    time.sleep(4)
+    time.sleep(10)
     
 client.loop_stop()
 

@@ -33,7 +33,7 @@ SoftwareSerial mySerial(10, 11);  // RX, TX
 
 //Timers
 const unsigned long mainLoopInterval = 100;
-const unsigned long rgbInterval = 10;
+const unsigned long rgbInterval = 8;
 
 unsigned long mainLoopTimer;
 unsigned long rgbTimer;
@@ -119,7 +119,39 @@ void loop() {
       mySerial.println("Sequence");
     }
 
-    mainLoopTimer = millis();    
+
+    //#########################################################
+    //Serial reading
+    char* espSerial = "";
+    int size;
+    while(size = mySerial.available() > 0 ){
+      char c = mySerial.read();
+      espSerial += c;
+    }
+
+    Serial.println(espSerial);
+
+    /* if(!strncmp(espSerial, "successful",size)){
+      for(int i = 0;i<4;i++){
+        setColor(0, 255, 0);
+        delay(500);
+        setColor(0, 0, 0);
+      }
+  
+    }else if(!strncmp(espSerial, "error",size)){
+      for(int i = 0;i<4;i++){
+        setColor(255, 0, 0);
+        delay(500);
+        setColor(0, 0, 0);
+      }
+    }else if(!strncmp(espSerial, "lumos",size)){
+      setColor(255, 255, 255);
+      delay(3000);
+      setColor(0, 0, 0);
+    } */
+    //############################################
+
+    mainLoopTimer = millis();
   }
 
   if((millis() - rgbTimer) >= rgbInterval){
