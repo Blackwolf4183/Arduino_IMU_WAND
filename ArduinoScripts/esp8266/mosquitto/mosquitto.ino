@@ -40,23 +40,35 @@ void setup() {
           delay(2000);
       }
   }
-  // publish and subscribe
-  //Serial.println("Sending message to topic");
-  //client.publish(topic, "HELLO WORLD");
+  //subscribe and publish
   client.subscribe(topic);
-  
   client.publish(topic, "ESP8266 up and running");
 }
 
-void callback(char *topic, byte *payload, unsigned int length) {
-  Serial.print("Message arrived in topic: ");
+void callback(char *topic_received, byte *payload, unsigned int length) {
+  /* Serial.print("Message arrived in topic: ");
   Serial.println(topic);
   Serial.print("Message:");
   for (int i = 0; i < length; i++) {
       Serial.print((char) payload[i]);
   }
   Serial.println();
-  Serial.println("-----------------------");
+  Serial.println("-----------------------"); */
+
+  //Send callback info to arduino nano
+  if (!strcmp(topic_received, topic)) {
+        if (!strncmp((char *)payload, "successful", length)) {
+          //server accepted instruction
+          Serial.println("successful");
+        } else if (!strncmp((char *)payload, "error", length)) {
+          //something went wrong on server
+          Serial.println("error");
+        }else if (!strncmp((char *)payload, "lumos", length)) {
+          //Server recognized lumos
+          Serial.println("lumos");
+        }
+    }
+
 }
 
 
