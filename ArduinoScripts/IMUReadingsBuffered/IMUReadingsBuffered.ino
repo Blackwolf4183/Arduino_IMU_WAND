@@ -6,10 +6,19 @@
 #define STACK_SIZE 20
 
 const int buttonPin = 2;
-const int ledPin = 3;
+//RGB Led
+const int redPin = 3;
+const int greenPin = 4;
+const int bluePin = 5;
+
+
+int counter = 0;
+
+// Number of colors used for animating, higher = smoother and slower animation)
+int numColors = 255;
 
 //Counter for the amount of sequences sent
-int counter = 0;
+int ledCounter = 0;
 int buttonState = 0;
 //Led to notify gesture recording
 bool ledOn = false;
@@ -25,7 +34,9 @@ void setup(void) {
   Serial.println("Starting program...");
 
   pinMode(buttonPin, INPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
 
   Serial.begin(115200);
   while (!Serial)
@@ -80,8 +91,35 @@ void loop() {
       counter = 0;
       //printStackToSerial();
     }
+    
   }
 
+  //RGB Led
+  if(ledOn){
+    float colorNumber = ledCounter > numColors ? ledCounter - numColors: ledCounter;
+    
+    // Play with the saturation and brightness values
+    // to see what they do
+    float saturation = 1; // Between 0 and 1 (0 = gray, 1 = full color)
+    float brightness = 1; // Between 0 and 1 (0 = dark, 1 is full brightness)
+    float hue = (colorNumber / float(numColors)) * 360; // Number between 0 and 360
+    long color = HSBtoRGB(hue, saturation, brightness); 
+    
+    // Get the red, blue and green parts from generated color
+    int red = color >> 16 & 255;
+    int green = color >> 8 & 255;
+    int blue = color & 255;
+
+    setColor(red, green, blue);
+    
+    // Counter can never be greater then 2 times the number of available colors
+    // the colorNumber = line above takes care of counting backwards (nicely looping animation)
+    // when counter is larger then the number of available colors
+    ledCounter = (ledCounter + 1) % (numColors * 2);
+  }else{
+    //If led not on just no color
+    setColor(0,0,0);
+  }
 
   //Button
   buttonState = digitalRead(buttonPin);
@@ -101,5 +139,84 @@ void loop() {
 void toggle_led() {
   ledOn = canPushButton;
   canPushButton = !canPushButton;
-  digitalWrite(ledPin, ledOn);  // toggle the LED
+  /* if(ledOn){
+    setColor(255,100,50);
+  }else{
+    setColor(0,0,0);
+  } */
+
+}
+
+//Set RGB Led Color
+void setColor(int redValue, int greenValue, int blueValue) {
+  analogWrite(redPin, redValue);
+  analogWrite(greenPin, greenValue);
+  analogWrite(bluePin, blueValue);
+}
+
+long HSBtoRGB(float _hue, float _sat, float _brightness) {
+    float red = 0.0;
+    float green = 0.0;
+    float blue = 0.0;
+    
+    if (_sat == 0.0) {
+        red = _brightness;
+        green = _brightness;
+        blue = _brightness;
+    } else {
+        if (_hue == 360.0) {
+            _hue = 0;
+        }
+
+        int slice = _hue / 60.0;
+        float hue_frac = (_hue / 60.0) - slice;
+
+        float aa = _brightness * (1.0 - _sat);
+        float bb = _brightness * (1.0 - _sat * hue_frac);
+        float cc = _brightness * (1.0 - _sat * (1.0 - hue_frac));
+        
+        switch(slice) {
+            case 0:
+                red = _brightness;
+                green = cc;
+                blue = aa;
+                break;
+            case 1:
+                red = bb;
+                green = _brightness;
+                blue = aa;
+                break;
+            case 2:
+                red = aa;
+                green = _brightness;
+                blue = cc;
+                break;
+            case 3:
+                red = aa;
+                green = bb;
+                blue = _brightness;
+                break;
+            case 4:
+                red = cc;
+                green = aa;
+                blue = _brightness;
+                break;
+            case 5:
+                red = _brightness;
+                green = aa;
+                blue = bb;
+                break;
+            default:
+                red = 0.0;
+                green = 0.0;
+                blue = 0.0;
+                break;
+        }
+    }
+
+    long ired = red * 255.0;
+    long igreen = green * 255.0;
+    long iblue = blue * 255.0;
+    
+    return long((ired << 16) | (igreen << 8) | (iblue));
 }
