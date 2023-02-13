@@ -11,13 +11,13 @@ const int redPin = 3;
 const int greenPin = 4;
 const int bluePin = 5;
 
-
+//Counter for the amount of sequences sent
 int counter = 0;
 
 // Number of colors used for animating, higher = smoother and slower animation)
 int numColors = 255;
 
-//Counter for the amount of sequences sent
+//Counter to keep track of led color
 int ledCounter = 0;
 int buttonState = 0;
 //Led to notify gesture recording
@@ -27,12 +27,26 @@ bool canPushButton = true;
 
 Adafruit_MPU6050 mpu;
 
+//Serial communication with Esp8266 Setup
 SoftwareSerial mySerial(10, 11);  // RX, TX
+
+
+//Timers
+const unsigned long mainLoopInterval = 100;
+const unsigned long rgbInterval = 10;
+
+unsigned long mainLoopTimer;
+unsigned long rgbTimer;
 
 void setup(void) {
 
   Serial.println("Starting program...");
 
+  //Timers
+  mainLoopTimer = millis();
+  rgbTimer = millis();
+
+  //Pin outputs
   pinMode(buttonPin, INPUT);
   pinMode(redPin, OUTPUT);
   pinMode(greenPin, OUTPUT);
@@ -66,85 +80,85 @@ void setup(void) {
 }
 
 
+
 void loop() {
 
 
-  /* Get new sensor events with the readings */
-  //if recording
-  if (ledOn) {
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+  if((millis() - mainLoopTimer) >= mainLoopInterval){
 
-    String values = "";
-    values = String(a.acceleration.x) + "," + String(a.acceleration.y) + "," + String(a.acceleration.z) + "," + String(g.gyro.x) + "," + String(g.gyro.y) + "," + String(g.gyro.z);
+    /* Get new sensor events with the readings */
+    //if recording
+    if (ledOn) {
+      sensors_event_t a, g, temp;
+      mpu.getEvent(&a, &g, &temp);
 
-    //Send over serial
-    mySerial.println(values);
-    counter++;
+      String values = "";
+      values = String(a.acceleration.x) + "," + String(a.acceleration.y) + "," + String(a.acceleration.z) + "," + String(g.gyro.x) + "," + String(g.gyro.y) + "," + String(g.gyro.z);
 
-    Serial.println(counter);
-    Serial.println(values);
-    if (counter == STACK_SIZE) {
-      //if buffer fills stop
-      toggle_led();
-      //restart counter
-      counter = 0;
-      //printStackToSerial();
+      //Send over serial
+      mySerial.println(values);
+      counter++;
+
+      Serial.println(counter);
+      Serial.println(values);
+      if (counter == STACK_SIZE) {
+        //if buffer fills stop
+        toggle_led();
+        //restart counter
+        counter = 0;
+      }
+      
     }
-    
+
+    //Button
+    buttonState = digitalRead(buttonPin);
+
+    if (buttonState == HIGH && canPushButton) {
+      Serial.println("Button has been pushed");
+      toggle_led();
+      mySerial.println("Sequence");
+    }
+
+    mainLoopTimer = millis();    
   }
 
-  //RGB Led
-  if(ledOn){
-    float colorNumber = ledCounter > numColors ? ledCounter - numColors: ledCounter;
-    
-    // Play with the saturation and brightness values
-    // to see what they do
-    float saturation = 1; // Between 0 and 1 (0 = gray, 1 = full color)
-    float brightness = 1; // Between 0 and 1 (0 = dark, 1 is full brightness)
-    float hue = (colorNumber / float(numColors)) * 360; // Number between 0 and 360
-    long color = HSBtoRGB(hue, saturation, brightness); 
-    
-    // Get the red, blue and green parts from generated color
-    int red = color >> 16 & 255;
-    int green = color >> 8 & 255;
-    int blue = color & 255;
+  if((millis() - rgbTimer) >= rgbInterval){
+    //RGB Led
+    if(ledOn){
+      float colorNumber = ledCounter > numColors ? ledCounter - numColors: ledCounter;
+      
+      //Led Brightness
+      float brightness = 1; // Between 0 and 1 (0 = dark, 1 is full brightness)
+      float saturation = 1; // Between 0 and 1 (0 = gray, 1 = full color)
+      float hue = (colorNumber / float(numColors)) * 360; // Number between 0 and 360
+      long color = HSBtoRGB(hue, saturation, brightness); 
+      
+      // Get the red, blue and green parts from generated color
+      int red = color >> 16 & 255;
+      int green = color >> 8 & 255;
+      int blue = color & 255;
 
-    setColor(red, green, blue);
-    
-    // Counter can never be greater then 2 times the number of available colors
-    // the colorNumber = line above takes care of counting backwards (nicely looping animation)
-    // when counter is larger then the number of available colors
-    ledCounter = (ledCounter + 1) % (numColors * 2);
-  }else{
-    //If led not on just no color
-    setColor(0,0,0);
+      setColor(red, green, blue);
+      
+      // Counter can never be greater then 2 times the number of available colors
+      // the colorNumber = line above takes care of counting backwards (nicely looping animation)
+      // when counter is larger then the number of available colors
+      ledCounter = (ledCounter + 1) % (numColors * 2);
+    }else{
+      //If led not on just no color
+      setColor(0,0,0);
+    }
+
+    rgbTimer = millis();
   }
 
-  //Button
-  buttonState = digitalRead(buttonPin);
-
-  if (buttonState == HIGH && canPushButton) {
-    Serial.println("Button has been pushed");
-    toggle_led();
-    mySerial.println("Sequence");
-  }
-
-
-  //Pick measurements each 100 ms
-  delay(100);
+  
 }
 
 //Toggle LED
 void toggle_led() {
   ledOn = canPushButton;
   canPushButton = !canPushButton;
-  /* if(ledOn){
-    setColor(255,100,50);
-  }else{
-    setColor(0,0,0);
-  } */
-
 }
 
 //Set RGB Led Color
