@@ -38,6 +38,11 @@ const unsigned long rgbInterval = 8;
 unsigned long mainLoopTimer;
 unsigned long rgbTimer;
 
+//Serial readings variables
+const byte numChars = 3;
+char receivedChars[numChars];   // an array to store the received data
+boolean newData = false;
+
 void setup(void) {
 
   Serial.println("Starting program...");
@@ -122,33 +127,57 @@ void loop() {
 
     //#########################################################
     //Serial reading
-    char* espSerial = "";
-    int size;
-    while(size = mySerial.available() > 0 ){
-      char c = mySerial.read();
-      espSerial += c;
+    recvWithEndMarker();
+    
+    if (newData == true) {
+        Serial.println("Code received: ");
+        Serial.println(receivedChars);
+
+        /* 
+        Response codes:
+        - c1: Operation succesfull
+        - c2: Error ocurred
+        - c3: Lumos command for wand 
+        
+        */
+
+
+        if(!strncmp(receivedChars, "c1",numChars)){
+            setColor(0, 255, 0);
+            delay(500);
+            setColor(0, 0, 0);
+            delay(500);
+            setColor(0, 255, 0);
+            delay(500);
+            setColor(0, 0, 0);
+            delay(500);
+            setColor(0, 255, 0);
+            delay(500);
+            setColor(0, 0, 0);
+ 
+      
+        }else if(!strncmp(receivedChars, "c2",numChars)){
+            setColor(255, 0, 0);
+            delay(300);
+            setColor(0, 0, 0);
+            delay(300);
+            setColor(255, 0, 0);
+            delay(300);
+            setColor(0, 0, 0);
+            delay(300);
+            setColor(255, 0, 0);
+            delay(300);
+            setColor(0, 0, 0);
+            
+        }else if(!strncmp(receivedChars, "c3",numChars)){
+          setColor(255, 255, 255);
+          delay(4000);
+          setColor(0, 0, 0);
+        }
+
+        newData = false;
     }
 
-    Serial.println(espSerial);
-
-    /* if(!strncmp(espSerial, "successful",size)){
-      for(int i = 0;i<4;i++){
-        setColor(0, 255, 0);
-        delay(500);
-        setColor(0, 0, 0);
-      }
-  
-    }else if(!strncmp(espSerial, "error",size)){
-      for(int i = 0;i<4;i++){
-        setColor(255, 0, 0);
-        delay(500);
-        setColor(0, 0, 0);
-      }
-    }else if(!strncmp(espSerial, "lumos",size)){
-      setColor(255, 255, 255);
-      delay(3000);
-      setColor(0, 0, 0);
-    } */
     //############################################
 
     mainLoopTimer = millis();
@@ -266,3 +295,29 @@ long HSBtoRGB(float _hue, float _sat, float _brightness) {
     
     return long((ired << 16) | (igreen << 8) | (iblue));
 }
+
+
+
+void recvWithEndMarker() {
+    static byte ndx = 0;
+    char endMarker = '\n';
+    char rc;
+    
+    while (mySerial.available() > 0 && newData == false) {
+        rc = mySerial.read();
+
+        if (rc != endMarker) {
+            receivedChars[ndx] = rc;
+            ndx++;
+            if (ndx >= numChars) {
+                ndx = numChars - 1;
+            }
+        }
+        else {
+            receivedChars[ndx] = '\0'; // terminate the string
+            ndx = 0;
+            newData = true;
+        }
+    }
+}
+

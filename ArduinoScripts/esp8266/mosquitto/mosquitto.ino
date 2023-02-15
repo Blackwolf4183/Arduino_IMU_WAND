@@ -46,26 +46,19 @@ void setup() {
 }
 
 void callback(char *topic_received, byte *payload, unsigned int length) {
-  /* Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-  Serial.print("Message:");
-  for (int i = 0; i < length; i++) {
-      Serial.print((char) payload[i]);
-  }
-  Serial.println();
-  Serial.println("-----------------------"); */
+
 
   //Send callback info to arduino nano
   if (!strcmp(topic_received, topic)) {
         if (!strncmp((char *)payload, "successful", length)) {
           //server accepted instruction
-          Serial.println("successful");
+          Serial.println("c1");
         } else if (!strncmp((char *)payload, "error", length)) {
           //something went wrong on server
-          Serial.println("error");
+          Serial.println("c2");
         }else if (!strncmp((char *)payload, "lumos", length)) {
           //Server recognized lumos
-          Serial.println("lumos");
+          Serial.println("c3");
         }
     }
 

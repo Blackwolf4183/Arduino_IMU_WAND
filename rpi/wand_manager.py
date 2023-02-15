@@ -26,7 +26,7 @@ def on_message(client, userdata, message):
 
         if len(sequence) == 20:
             onSequence = False
-            print("#######Se ha completado una secuencia#######")
+            print("#######  e ha completado una secuencia  #######")
             result = CNN.processData(sequence)
             print("NEURAL NETWORK RESULT: ", result)
             sequence.clear()
