@@ -1,34 +1,53 @@
 import paho.mqtt.client as mqtt
 import time
 import CNN
+import DataProcessing
 
+
+#TODO: CHANGE TO 192.168.1.120+
+# Mqtt server IP
+broker_address = "localhost"
+
+#Message string over mqtt
 message = ""
-
 #Sequence of data
 sequence = []
+#Checks if currently receiving sequence
 onSequence = False
-
-
 
 
 def on_message(client, userdata, message):
     global onSequence, sequence
 
+    #Decode message
     message = str(message.payload.decode("utf-8"))
     print("message received ", message)
-    #TODO: Mirar si era mayus
+
+    #Search for "sequence" word to start "recording" sequence
     if message == "sequence":
         if not onSequence: 
             onSequence = True
-        else: print("Error sequence received while on sequence")
-
+            #Error if received two simultaneous sequences
+        else: print("Error sequence received while on sequence") 
+    #If we are already on a sequence
     elif onSequence:
 
+        #All data sent (sequences of length 20)
         if len(sequence) == 20:
             onSequence = False
-            print("#######  e ha completado una secuencia  #######")
-            result = CNN.processData(sequence)
-            print("NEURAL NETWORK RESULT: ", result)
+            print("#######  Sequence completed  #######")
+            #Process the data in the covolutional neural network
+
+            #TODO: for now only
+            DataProcessing.process_image(sequence)
+            
+            """ result = CNN.processData(sequence)
+            #TODO: print over mqtt channel the result 
+            print("NEURAL NETWORK RESULT: ", result) """
+
+
+
+            #Clear sequence for incoming ones
             sequence.clear()
         else:
             #Unpack values
@@ -52,8 +71,6 @@ def on_message(client, userdata, message):
         #TODO: another handling method?
         print("error")
 
-
-
     message_received = True
     
 def on_connect(client, userdata, flags, rc):
@@ -66,10 +83,12 @@ def on_connect(client, userdata, flags, rc):
     else:
         print("Unable To Connect")
         
+
+
+# ------------- Connection with Mqtt server ----------------
+
 connected = False
 message_received = False
-#TODO: CHANGE TO 192.168.1.120
-broker_address = "localhost"
 
 print("Creating new instance")
 client = mqtt.Client("MQTT")
