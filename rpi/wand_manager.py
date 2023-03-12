@@ -3,10 +3,9 @@ import time
 import CNN
 import DataProcessing
 
-
-#TODO: CHANGE TO 192.168.1.120+
+#TODO: CHANGE TO 192.168.1.120
 # Mqtt server IP
-broker_address = "localhost"
+broker_address = "192.168.1.120"
 
 #Message string over mqtt
 message = ""
@@ -21,19 +20,19 @@ def on_message(client, userdata, message):
 
     #Decode message
     message = str(message.payload.decode("utf-8"))
-    print("message received ", message)
+    message = message.strip()
+    print("\tmessage received:", message)
 
     #Search for "sequence" word to start "recording" sequence
-    if message == "sequence":
+    if message == "Sequence":
         if not onSequence: 
             onSequence = True
             #Error if received two simultaneous sequences
         else: print("Error sequence received while on sequence") 
     #If we are already on a sequence
     elif onSequence:
-
-        #All data sent (sequences of length 20)
-        if len(sequence) == 20:
+        #All data sent (sequences of length 20) (19 is the last one received)
+        if len(sequence) == 19:
             onSequence = False
             print("#######  Sequence completed  #######")
             #Process the data in the covolutional neural network
@@ -41,10 +40,14 @@ def on_message(client, userdata, message):
             #TODO: for now only
             DataProcessing.process_image(sequence)
             
-            """ result = CNN.processData(sequence)
-            #TODO: print over mqtt channel the result 
-            print("NEURAL NETWORK RESULT: ", result) """
 
+            #result = CNN.processData(sequence)
+            #TODO: print over mqtt channel the result 
+            #print("NEURAL NETWORK RESULT: ", result) 
+
+            time.sleep(1)
+
+            client.publish("wand_sensor", "successful")
 
 
             #Clear sequence for incoming ones
@@ -52,7 +55,7 @@ def on_message(client, userdata, message):
         else:
             #Unpack values
             try:
-                values = message.split(", ")
+                values = message.split(",")
                 aX = float(values[0]);
                 aY = float(values[1])
                 aZ = float(values[2])
@@ -66,20 +69,25 @@ def on_message(client, userdata, message):
 
             except Exception as e:
                 print("There was an error unpacking or getting values")
+                client.publish("wand_sensor", "error")   
+                onSequence = False
 
     else:
-        #TODO: another handling method?
-        print("error")
+        if message == "Starting conexion":
+            time.sleep(5)
+            client.publish("wand_sensor", "successful")    
+        elif message != "ESP8266 up and running" and message != "lumos" and message != "error" and message != "successful":
+            print("error")
+
 
     message_received = True
     
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("Connected")
         global connected
         connected = True
         print("Connected")
-        print("..........")
+        print("#########")
     else:
         print("Unable To Connect")
         
@@ -96,7 +104,7 @@ client = mqtt.Client("MQTT")
 client.on_message = on_message
 client.on_connect = on_connect
 
-print("Connecting to broker")
+print("Connecting to broker: ", broker_address)
 client.connect(broker_address, port=1883)
 
 client.loop_start()

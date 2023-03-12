@@ -1,12 +1,23 @@
-import time
 import numpy as np
 from PIL import Image
-import tensorflow as tf
+import os
+import re
 
-counter = 1
+path = './dataset/leviosa'
 
 def process_image(img_array):
-    global counter
+    
+    current_index = 0
+
+    #Find index of latest image
+    files = os.listdir(path)
+    
+    for file in files:
+        numbers = re.findall(r'\d+', file)
+        if len(numbers) > 0 and int(numbers[0]) > current_index:
+            current_index = int(numbers[0])
+    
+    current_index += 1
 
     np_img_array = np.array(img_array, dtype=float)
     #Normalize array
@@ -18,7 +29,5 @@ def process_image(img_array):
     uint8_arr = scaled_arr.astype(np.uint8)
 
     image = Image.fromarray(uint8_arr, 'L')
-    image.save("./dataset/lumos/lumos${counter}.jpeg", 'JPEG')
+    image.save(f"./dataset/leviosa/leviosa{str(current_index)}.jpeg", 'JPEG')
 
-    counter += 1
-    

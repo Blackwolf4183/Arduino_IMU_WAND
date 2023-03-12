@@ -7,9 +7,9 @@
 
 const int buttonPin = 2;
 //RGB Led
-const int redPin = 3;
-const int greenPin = 4;
-const int bluePin = 5;
+const int redPin = 6;
+const int greenPin = 7;
+const int bluePin = 8;
 
 //Counter for the amount of sequences sent
 int counter = 0;
