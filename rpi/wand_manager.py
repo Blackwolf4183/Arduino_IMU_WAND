@@ -33,6 +33,8 @@ def on_message(client, userdata, message):
     elif onSequence:
         #All data sent (sequences of length 20) (19 is the last one received)
         if len(sequence) == 19:
+
+            #TODO: add one more sequence?
             onSequence = False
             print("#######  Sequence completed  #######")
             #Process the data in the covolutional neural network
