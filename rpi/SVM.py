@@ -1,17 +1,13 @@
 import pandas as pd
 import os
-from skimage.transform import resize
 from skimage.io import imread
 import numpy as np
-import matplotlib.pyplot as plt
+import pickle
 
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-
-import pickle
-
 
 
 
@@ -21,7 +17,7 @@ target_arr=[] #output array
 datadir='./dataset/' 
 
 
-
+#Loads into a dataframe a given dataset by datadir
 def loadDataset():
     #path which contains all the categories of images
     for i in Categories:
@@ -30,7 +26,6 @@ def loadDataset():
         path=os.path.join(datadir,i)
         for img in os.listdir(path):
             img_array=imread(os.path.join(path,img))
-            #img_resized=resize(img_array,(150,150,3))
             flat_data_arr.append(img_array.flatten())
             target_arr.append(Categories.index(i))
         print(f'loaded category:{i} successfully')
@@ -44,6 +39,7 @@ def loadDataset():
     return x,y
 
 
+#Generation of SVM model
 def generateModel(x,y):
     param_grid={'C':[0.1,1,10,100],'gamma':[0.0001,0.001,0.1,1],'kernel':['rbf','poly']}
     svc=svm.SVC(probability=True)
@@ -55,6 +51,7 @@ def generateModel(x,y):
     # model.best_params_ contains the best parameters obtained from GridSearchCV
     return model, x_train, y_train
 
+#Testing of model
 def testModel(model, x_test, y_test):
     y_pred=model.predict(x_test)
     print("The predicted Data is :")
@@ -64,8 +61,9 @@ def testModel(model, x_test, y_test):
     print(f"The model is {accuracy_score(y_pred,y_test)*100}% accurate")
     
 
-def makePredictionWithImage(imgPath, model):
-    testing_path = './test/'
+#INFO: predictions only for testing purposes
+def makePredictionWithImage(model):
+    testing_path = './test/' #Change this to search in desired directory
     testImage = imread(os.path.join(testing_path,'lumos2.jpeg'))
     l=[testImage.flatten()]
     probability=model.predict_proba(l)
@@ -75,6 +73,8 @@ def makePredictionWithImage(imgPath, model):
 
     print("The predicted image is : "+Categories[model.predict(l)[0]])
 
+
+#Makes prediction given model and image array
 def makePrediction(imgArr, model):
     l=[imgArr.flatten()]
     probability=model.predict_proba(l)
@@ -83,8 +83,8 @@ def makePrediction(imgArr, model):
         print(f'{val} = {probability[0][ind]*100}%')
 
     predictedIndex = model.predict(l)[0]
-    print("The predicted image is : "+Categories[model.predict(l)[0]])
-    return Categories, probability, predictedIndex
+    print("The predicted image is : "+Categories[predictedIndex])
+    return probability, predictedIndex
 
 
 def saveModel(model, filename):
@@ -94,11 +94,3 @@ def loadModel(filename):
     loaded_model = pickle.load(open(filename, "rb"))
     return loaded_model
 
-
-#TODO: test again weird probabilities on linux
-""" x,y = loadDataset()
-model,x_train,y_train = generateModel(x,y)
-testModel(model,x_train,y_train) """
-
-""" model = loadModel("svm.pickle")
-makePrediction("asd",model) """

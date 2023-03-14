@@ -6,7 +6,9 @@ import SVM
 import numpy as np
 
 path = './dataset/leviosa'
+filename= 'leviosa'
 
+#Takes a n sequence of 6 values, converts it into an Image and saves it to path with incremented index
 def process_and_save_image(img_array):
     
     current_index = 0
@@ -32,11 +34,11 @@ def process_and_save_image(img_array):
 
     image = Image.fromarray(uint8_arr, 'L')
     
-    image.save(f"./dataset/leviosa/leviosa{str(current_index)}.jpeg", 'JPEG')
+    image.save(f"{path}/{filename}{str(current_index)}.jpeg", 'JPEG')
 
 
-def process_image(img_array):
-    current_index += 1
+#Normalizes sequence into an grayscale image to then run a prediction on a trained SVM
+def process_sequence(img_array, model):
 
     np_img_array = np.array(img_array, dtype=float)
     #Normalize array
@@ -47,18 +49,7 @@ def process_image(img_array):
     scaled_arr = norm_arr * 255
     uint8_arr = scaled_arr.astype(np.uint8)
 
-    model = SVM.loadModel("svm.pickle")
-    #TODO: Probablemente no funcione con array de numpy (ver si se puede hacer sin guardar en disco)
-    probability, categories = SVM.makePrediction(data, model)
-    return probability, categories, predictedIndex
+    #Run prediction on given model and calculated image out of sequence
+    probabilityDistribution, predictedIndex = SVM.makePrediction(uint8_arr, model)
+    return probabilityDistribution, predictedIndex
 
-
-
-#TODO: remove 
-image = Image.open('./test/lumos2.jpeg')
-data = np.asarray(image)
-model = SVM.loadModel("svm.pickle")
-#REVIEW: funciona 
-probability, categories, predictedIndex = SVM.makePrediction(data, model)
-print(probability)
-print(categories)

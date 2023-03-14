@@ -3,6 +3,7 @@ import time
 #import CNN
 import SVM
 import DataProcessing
+import pickle
 
 #TODO: CHANGE TO 192.168.1.120
 # Mqtt server IP
@@ -15,6 +16,8 @@ sequence = []
 #Checks if currently receiving sequence
 onSequence = False
 
+# Model used for predictions 
+model = SVM.loadModel("svm.pickle")
 
 def on_message(client, userdata, message):
     global onSequence, sequence
@@ -35,19 +38,21 @@ def on_message(client, userdata, message):
         #All data sent (sequences of length 20) (19 is the last one received)
         if len(sequence) == 19:
 
-            #TODO: add one more sequence?
+            #REVIEW: add one more sequence?
             onSequence = False
             print("#######  Sequence completed  #######")
-            #Process the data in the covolutional neural network
+            #Process the data in the SVM
 
-            #TODO: for now only
-            probability, categories, predictedIndex = DataProcessing.process_image(sequence)
-            
+            probabilityDistribution, predictedIndex = DataProcessing.process_sequence(sequence, model)
+    
+            predictedProbability = probabilityDistribution[0][predictedIndex] * 100
             #Not accurte prediction, displaying error
-            if probability[predictedIndex] < 80:
+            if predictedProbability < 75:
+                print("Prediction was not good")
                 client.publish("wand_sensor", "error")
             else:
                 #Prediction acceleptable, display successful
+                print("Prediction with high chance")
                 time.sleep(1)
                 client.publish("wand_sensor", "successful")
 
@@ -64,7 +69,6 @@ def on_message(client, userdata, message):
                 rY = float(values[4])
                 rZ = float(values[5])
 
-                
                 #Append values to sequence
                 sequence.append([aX,aY,aZ,rX,rY,rZ])
 
