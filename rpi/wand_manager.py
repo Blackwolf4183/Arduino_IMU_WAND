@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import time
-import CNN
+#import CNN
+import SVM
 import DataProcessing
 
 #TODO: CHANGE TO 192.168.1.120
@@ -40,17 +41,12 @@ def on_message(client, userdata, message):
             #Process the data in the covolutional neural network
 
             #TODO: for now only
+            #TODO: añadir flujo de errores
             DataProcessing.process_image(sequence)
             
-
-            #result = CNN.processData(sequence)
-            #TODO: print over mqtt channel the result 
-            #print("NEURAL NETWORK RESULT: ", result) 
-
             time.sleep(1)
 
             client.publish("wand_sensor", "successful")
-
 
             #Clear sequence for incoming ones
             sequence.clear()
