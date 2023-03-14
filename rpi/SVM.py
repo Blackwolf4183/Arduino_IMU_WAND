@@ -82,7 +82,9 @@ def makePrediction(imgArr, model):
     for ind,val in enumerate(Categories):
         print(f'{val} = {probability[0][ind]*100}%')
 
+    predictedIndex = model.predict(l)[0]
     print("The predicted image is : "+Categories[model.predict(l)[0]])
+    return Categories, probability, predictedIndex
 
 
 def saveModel(model, filename):

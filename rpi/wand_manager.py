@@ -41,12 +41,15 @@ def on_message(client, userdata, message):
             #Process the data in the covolutional neural network
 
             #TODO: for now only
-            #TODO: añadir flujo de errores
-            DataProcessing.process_image(sequence)
+            probability, categories, predictedIndex = DataProcessing.process_image(sequence)
             
-            time.sleep(1)
-
-            client.publish("wand_sensor", "successful")
+            #Not accurte prediction, displaying error
+            if probability[predictedIndex] < 80:
+                client.publish("wand_sensor", "error")
+            else:
+                #Prediction acceleptable, display successful
+                time.sleep(1)
+                client.publish("wand_sensor", "successful")
 
             #Clear sequence for incoming ones
             sequence.clear()

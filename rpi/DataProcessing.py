@@ -3,6 +3,7 @@ from PIL import Image
 import os
 import re
 import SVM
+import numpy as np
 
 path = './dataset/leviosa'
 
@@ -48,4 +49,16 @@ def process_image(img_array):
 
     model = SVM.loadModel("svm.pickle")
     #TODO: Probablemente no funcione con array de numpy (ver si se puede hacer sin guardar en disco)
-    SVM.makePrediction(uint8_arr, model)
+    probability, categories = SVM.makePrediction(data, model)
+    return probability, categories, predictedIndex
+
+
+
+#TODO: remove 
+image = Image.open('./test/lumos2.jpeg')
+data = np.asarray(image)
+model = SVM.loadModel("svm.pickle")
+#REVIEW: funciona 
+probability, categories, predictedIndex = SVM.makePrediction(data, model)
+print(probability)
+print(categories)
