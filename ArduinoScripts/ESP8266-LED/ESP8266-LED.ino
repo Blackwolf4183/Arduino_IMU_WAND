@@ -15,12 +15,12 @@ const int mqtt_port = 1883;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-const int ledPin = 1; 
+const int relay = 5;
 
 void setup() {
-  pinMode (ledPin, OUTPUT);
-  pinMode (0, OUTPUT);
-  pinMode (2, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); 
+  pinMode (relay, OUTPUT);
+
   // Set software serial baud to 115200;
   Serial.begin(115200);
   // connecting to a WiFi network
@@ -59,16 +59,14 @@ void callback(char *topic_received, byte *payload, unsigned int length) {
   if (!strcmp(topic_received, topic)) {
         if (!strncmp((char *)payload, "successful", length)) {
           //server accepted instruction
-          digitalWrite(ledPin, HIGH); // LED on
-          digitalWrite(0, HIGH); // LED on
-          digitalWrite(2, HIGH); // LED on
+          digitalWrite(relay, HIGH); // LED on
           Serial.print("LED ON");
+          digitalWrite(LED_BUILTIN, HIGH);
         } else if (!strncmp((char *)payload, "error", length)) {
           //something went wrong on server
-          digitalWrite(ledPin, LOW); // LED OFF
-          digitalWrite(0, LOW); // LED OFF
-          digitalWrite(2, LOW); // LED OFF
+          digitalWrite(relay, LOW); // LED OFF
           Serial.print("LED OFF");
+          digitalWrite(LED_BUILTIN, LOW);
         }
     }
 
